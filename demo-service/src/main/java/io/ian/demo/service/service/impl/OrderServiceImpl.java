@@ -13,10 +13,13 @@ import io.ian.demo.service.entity.OrderItem;
 import io.ian.demo.service.service.OrderItemService;
 import io.ian.demo.service.service.OrderService;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.sql.DataSource;
+import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,11 +31,14 @@ import java.util.stream.Collectors;
  * @author XHD
  * @since 2020-07-16
  */
+@Slf4j
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
 
     @Resource
     private OrderItemService orderItemService;
+    @Resource
+    private DataSource dataSource;
 
     @Override
     public void initData() {
@@ -140,6 +146,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         calendar.set(Calendar.MINUTE, random.nextInt(60));
         calendar.set(Calendar.SECOND, random.nextInt(60));
         return calendar.getTime();
+    }
+
+    /**
+     * 创建分表
+     *
+     * @param oldTable 主表表名
+     * @param newTbale 分表表名
+     * @throws Exception
+     */
+    private void buildCutTable(String oldTable, String newTbale) throws Exception {
+        long start = System.currentTimeMillis();
+        StringBuilder creatSql = new StringBuilder();
+        creatSql.append("CREATE  TABLE if not exists ");
+        creatSql.append(newTbale);
+        creatSql.append(" LIKE ");
+        creatSql.append(oldTable);
+
+        try (PreparedStatement preStateMent = dataSource.getConnection().prepareStatement(creatSql.toString())) {
+            preStateMent.execute();
+        } catch (Exception e) {
+            log.error("buildCutTable exception...", e);
+        }
+
+        long end = System.currentTimeMillis();
+        log.info("创建{}表耗时{}ms", newTbale, (end - start));
     }
 
 }
