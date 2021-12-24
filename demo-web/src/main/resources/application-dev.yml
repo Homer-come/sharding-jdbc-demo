@@ -2,8 +2,6 @@ server:
   port: 8088
   tomcat:
     uri-encoding: utf-8
-  servlet:
-    context-path: /demo
     ###### shardingJDBC ##########
 spring:
   shardingsphere:
@@ -18,14 +16,14 @@ spring:
     sharding:
       tables:
         t_order:
-          actual-data-nodes: ds.t_order_$->{2020..2021}_$->{1..12}
+          actual-data-nodes: ds.t_order_$->{[2020]}_$->{1..12}
           table-strategy:
             standard:
               sharding-column: create_time
               precise-algorithm-class-name: io.ian.demo.core.shardingjdbc.DatePreciseShardingAlgorithm
               range-algorithm-class-name: io.ian.demo.core.shardingjdbc.DateRangeShardingAlgorithm
         t_order_item:
-          actual-data-nodes: ds.t_order_item_$->{2020..2021}_$->{1..12}
+          actual-data-nodes: ds.t_order_item_$->{[2020]}_$->{1..12}
           table-strategy:
             standard:
               sharding-column: order_create_time
